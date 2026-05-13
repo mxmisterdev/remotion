@@ -2,7 +2,7 @@ import type {Codec} from '../codec';
 import type {AnyRemotionOption} from './option';
 import {separateAudioOption} from './separate-audio';
 
-export const validAudioCodecs = ['pcm-16', 'aac', 'mp3', 'opus'] as const;
+export const validAudioCodecs = ['pcm-16', 'pcm-24', 'aac', 'mp3', 'opus'] as const;
 
 export type AudioCodec = (typeof validAudioCodecs)[number];
 
@@ -16,7 +16,7 @@ export const supportedAudioCodecs = {
 	h265: ['aac', 'pcm-16'] as const,
 	av1: ['aac', 'opus', 'pcm-16'] as const,
 	mp3: ['mp3', 'pcm-16'] as const,
-	prores: ['aac', 'pcm-16'] as const,
+	prores: ['aac', 'pcm-16', 'pcm-24'] as const,
 	vp8: ['opus', 'pcm-16'] as const,
 	vp9: ['opus', 'pcm-16'] as const,
 	wav: ['pcm-16'] as const,
@@ -31,6 +31,7 @@ if (_satisfies) {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const audioCodecNames = [
 	'pcm_s16le',
+	'pcm_s24le',
 	'libfdk_aac',
 	'libmp3lame',
 	'libopus',
@@ -55,6 +56,10 @@ export const mapAudioCodecToFfmpegAudioCodecName = (
 
 	if (audioCodec === 'pcm-16') {
 		return 'pcm_s16le';
+	}
+
+	if (audioCodec === 'pcm-24') {
+		return 'pcm_s24le';
 	}
 
 	throw new Error('unknown audio codec: ' + audioCodec);
@@ -179,7 +184,7 @@ export const resolveAudioCodec = ({
 			selected !== derivedFromSeparateAudioToExtension
 		) {
 			throw new Error(
-				`The audio codec derived from --${separateAudioOption.cliFlag} is ${derivedFromSeparateAudioToExtension}, but does not match the audio codec derived from the "Prefer lossless" option (${selected}). Remove any conflicting options.`,
+				`The audio codec derived from --${separateAudioOption.cliFlag} is ${derivedFromSeparateAudioToExtension}, but does not match the audio codec derived from the "Prefer lossless" option (${selected}).`,
 			);
 		}
 
@@ -199,7 +204,7 @@ export const resolveAudioCodec = ({
 		derivedFromSeparateAudioToExtension
 	) {
 		throw new Error(
-			`The audio codec derived from --${separateAudioOption.cliFlag} is ${derivedFromSeparateAudioToExtension}, but does not match the audio codec derived from your ${audioCodecOption.name} setting (${setting}). Remove any conflicting options.`,
+			`The audio codec derived from --${separateAudioOption.cliFlag} is ${derivedFromSeparateAudioToExtension}, but does not match the audio codec derived from your ${audioCodecOption.name} setting (${setting}).`,
 		);
 	}
 
@@ -266,7 +271,7 @@ export const audioCodecOption = {
 		};
 	},
 	description: () =>
-		`Set the format of the audio that is embedded in the video. Not all codec and audio codec combinations are supported and certain combinations require a certain file extension and container format. See the table in the docs to see possible combinations.`,
+		`Set the format of the audio that is embedded in the video. Not all codec and audio codec combinations are supported and certain combinations require a certain file extension and container format. See the docs for the supported combinations.`,
 	docLink: 'https://www.remotion.dev/docs/encoding/#audio-codec',
 	name: 'Audio Codec',
 	ssrName,
